@@ -20,10 +20,10 @@ train_cons = read_csv('./preprocessed/TrainActualConsumptionDataP.csv', header=0
 train_cons.index = pd.to_datetime(train_cons.index)
 print(train_cons[train_cons['ActualConsumption'] < 60])
 train_prod = read_csv('./preprocessed/TrainProdDataP.csv', header=0, index_col='ProductionDate')
-planned = read_csv('./preprocessed/TrainPlannedDailyProduction.csv', header=0, index_col='ProductionDate')
 
 train_prod.index = pd.to_datetime(train_prod.index)
 train_columns = ['temp', 'barometric']
+train_columns = []
 dataset = train_cons.merge(train_prod[train_columns], left_index=True, right_index=True, how='inner')
 submission = read_csv('./preprocessed/SampleSubmission3.csv', header=0, index_col='ConsumptionDate')
 
@@ -33,7 +33,7 @@ test_cons = read_csv('./preprocessed/TestActualConsumptionDataP.csv', header=0, 
 #
 # test['gen_sum'] = (test['Gen1num1'] + test['Gen1num2']) * 0.03 + test['Gen2'] * 0.06
 # test_values = test.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
-dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'] + train_columns, axis=1)
+dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
 
 # print(test_values.columns)
 print(dataset.columns)
@@ -58,7 +58,7 @@ train_X, train_y = series_to_supervised(train_scaled, WINDOW_SIZE, 1)
 
 # fit network
 cp = ModelCheckpoint('best.h5', save_best_only=True)
-es = EarlyStopping(patience=5)
+es = EarlyStopping(patience=3)
 rlrop = ReduceLROnPlateau(patience=2)
 model = LstmModel(train_X.shape[1], train_X.shape[2]).model
 history = model.fit(train_X, train_y, epochs=EPOCHS, batch_size=72, validation_split=0.2, verbose=2,

@@ -14,7 +14,8 @@ NUM_OF_FEATURES = 12
 EPOCHS = 30
 
 # load dataset
-train_columns = ['temp', 'humidity', 'barometric', 'P1prod', 'P2prod', 'P3prod', 'P4prod', 'P5prod', 'P6prod']
+train_columns = ['temp', 'barometric']
+train_columns = []
 
 train_cons = read_csv('./preprocessed/TrainActualConsumptionDataP.csv', header=0, index_col='ConsumptionDate')
 train_prod = read_csv('./preprocessed/TrainProdDataP.csv', header=0, index_col='ProductionDate')
@@ -34,8 +35,8 @@ test_prod.index = pd.to_datetime(test_prod.index)
 test = test_cons.merge(test_prod[train_columns], left_index=True, right_index=True, how='inner')
 
 test['gen_sum'] = (test['Gen1num1'] + test['Gen1num2']) * 0.03 + test['Gen2'] * 0.06
-test_values = test.drop(['Gen1num1', 'Gen1num2', 'Gen2'] + train_columns, axis=1)
-dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'] + train_columns, axis=1)
+test_values = test.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
+dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
 print(dataset.shape)
 
 print(test_values.shape)
