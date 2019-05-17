@@ -13,15 +13,32 @@ WINDOW_SIZE = 7 * 48
 NUM_OF_FEATURES = 12
 EPOCHS = 30
 
-
-
 # load dataset
-dataset = read_csv('./preprocessed/TrainActualConsumptionDataP.csv', header=0, index_col='ConsumptionDate')
+train_columns = ['temp', 'humidity', 'barometric', 'P1prod', 'P2prod', 'P3prod', 'P4prod', 'P5prod', 'P6prod']
+
+train_cons = read_csv('./preprocessed/TrainActualConsumptionDataP.csv', header=0, index_col='ConsumptionDate')
+train_prod = read_csv('./preprocessed/TrainProdDataP.csv', header=0, index_col='ProductionDate')
+test_cons1 = read_csv('./preprocessed/TestActualConsumptionData.csv', header=0, index_col='ConsumptionDate')
+
+train_cons.index = pd.to_datetime(train_cons.index)
+train_prod.index = pd.to_datetime(train_prod.index)
+dataset = train_cons.merge(train_prod[train_columns], left_index=True, right_index=True, how='inner')
+
 submission = read_csv('./preprocessed/SampleSubmission3.csv', header=0, index_col='ConsumptionDate')
-test = read_csv('./preprocessed/TestActualConsumptionDataP.csv', header=0, index_col='ConsumptionDate')
+
+test_cons = read_csv('./preprocessed/TestActualConsumptionDataP.csv', header=0, index_col='ConsumptionDate')
+
+test_prod = read_csv('./preprocessed/TestProdDataP.csv', header=0, index_col='ProductionDate')
+test_cons.index = pd.to_datetime(test_cons.index)
+test_prod.index = pd.to_datetime(test_prod.index)
+test = test_cons.merge(test_prod[train_columns], left_index=True, right_index=True, how='inner')
+
 test['gen_sum'] = (test['Gen1num1'] + test['Gen1num2']) * 0.03 + test['Gen2'] * 0.06
-test_values = test.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
-dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'], axis=1)
+test_values = test.drop(['Gen1num1', 'Gen1num2', 'Gen2'] + train_columns, axis=1)
+dataset = dataset.drop(['Gen1num1', 'Gen1num2', 'Gen2'] + train_columns, axis=1)
+print(dataset.shape)
+
+print(test_values.shape)
 
 # print(test_values.columns)
 # print(dataset.columns)
@@ -65,26 +82,30 @@ print('Test RMSE: %.3f' % rmse)
 
 test_X = test_X.reshape((test_X.shape[0], NUM_OF_FEATURES * WINDOW_SIZE))
 # invert scaling for forecast
-inv_yhat = concatenate((yhat, test_X[:, 0:NUM_OF_FEATURES-1]), axis=1)
+inv_yhat = concatenate((yhat, test_X[:, 0:NUM_OF_FEATURES - 1]), axis=1)
 inv_yhat = scaler.inverse_transform(inv_yhat)
 inv_yhat = inv_yhat[:, 0]
 # invert scaling for actual
 test_y = test_y.reshape((len(test_y), 1))
-inv_y = concatenate((test_y, test_X[:, 0:NUM_OF_FEATURES-1]), axis=1)
+inv_y = concatenate((test_y, test_X[:, 0:NUM_OF_FEATURES - 1]), axis=1)
 inv_y = scaler.inverse_transform(inv_y)
 inv_y = inv_y[:, 0]
 # calculate RMSE
-rmse = sqrt(mean_squared_error(inv_y, inv_yhat))
+pyplot.plot(inv_y, label='Inverse actual')
+
+inv_y = test_cons1['ActualConsumption'].values[:-48]
+print(inv_y)
+rmse = sqrt(mean_squared_error(inv_y, inv_yhat[:-48]))
 print('-------Inverse RMSE: %.3f' % rmse)
 
-mape = _calculate_mape(inv_y, inv_yhat)
+# d = pd.DataFrame(inv_y, inv_yhat[:-48])
+mape = _calculate_mape(inv_y, inv_yhat[:-48])
 print(inv_yhat)
 print('-------Inverse MAPE: %.3f' % mape)
 
 # plot results
-pyplot.plot(inv_y, label='Inverse actual')
 
-pyplot.plot(inv_yhat, label='Inverse predicted')
+pyplot.plot(inv_yhat[:-48], label='Inverse predicted')
 pyplot.legend()
 pyplot.show()
 

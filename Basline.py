@@ -5,9 +5,9 @@ import datetime
 def _read_data():
     train_planned_prod = pd.read_csv('TrainPlannedDailyProductionP.csv')
     train_actual_prod = pd.read_csv('TrainProdDataP.csv')
-    train_cons = pd.read_csv('TrainActualConsumptionDataP.csv')
+    train_cons = pd.read_csv('TrainActualConsumptionDataP_1.csv')
     test_actual_prod = pd.read_csv('TestProdDataP.csv')
-    test_cons = pd.read_csv('TestActualConsumptionDataP.csv')
+    test_cons = pd.read_csv('TestActualConsumptionDataP_1.csv')
 
     return train_planned_prod, train_actual_prod, train_cons, test_actual_prod, test_cons
 
